@@ -28,7 +28,7 @@ export const Table = ({ entryList, switchTask, fetchAllTasks }) => {
         : badList.map((bad) => bad._id);
 
     checked
-      ? setIdsToDelete([...idsToDelete, ...ids])
+      ? setIdsToDelete([...new Set([...idsToDelete, ...ids])])
       : setIdsToDelete(idsToDelete.filter((id) => !ids.includes(id)));
   };
 
@@ -59,6 +59,7 @@ export const Table = ({ entryList, switchTask, fetchAllTasks }) => {
               id="selectEntryList"
               onChange={handelOnSelectAll}
               value="entry"
+              checked={entries.every(item =>idsToDelete.includes(item._id))}
             />
             <label htmlFor="selectEntryList">Select all entry list</label>
           </div>
@@ -109,6 +110,7 @@ export const Table = ({ entryList, switchTask, fetchAllTasks }) => {
               id="selectEntryList"
               onChange={handelOnSelectAll}
               value="bad"
+              checked={badList.every(item =>idsToDelete.includes(item._id))}
             />
             <label htmlFor="selectEntryList">Select all Bad list</label>
           </div>
