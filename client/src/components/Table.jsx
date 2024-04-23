@@ -1,16 +1,16 @@
 import React, { useState } from "react";
+import { deleteTasks } from "../utils/axiosHelper";
 
-export const Table = ({ entryList, switchTask, handOnDelete }) => {
+export const Table = ({ entryList, switchTask, fetchAllTasks }) => {
   const [idsToDelete, setIdsToDelete] = useState([]);
 
   const entries = entryList.filter((item) => item.type === "entry");
   const badList = entryList.filter((item) => item.type === "bad");
 
-  const handleOnSelect = (e) => {
+  const handelOnSelect = (e) => {
     const { checked, value } = e.target;
 
     if (checked) {
-      //add
       setIdsToDelete([...idsToDelete, value]);
     } else {
       //remove
@@ -19,54 +19,50 @@ export const Table = ({ entryList, switchTask, handOnDelete }) => {
     }
   };
 
-  const handleOnSelectAll = (e) => {
+  const handelOnSelectAll = (e) => {
     const { checked, value } = e.target;
     console.log(checked, value);
+    const ids =
+      value === "entry"
+        ? entries.map((entry) => entry._id)
+        : badList.map((bad) => bad._id);
 
-    if (value === "entry") {
-      if (checked) {
-        //get all ids of entry and add to idstodelte
-      } else {
-        //remove all the ids of entry from idstodelte
-      }
-    }
-    if (value === "bad") {
-      if (checked) {
-        //get all ids of bad and add to idstodelte
-      } else {
-        //remove all the ids of bad from idstodelte
+    checked
+      ? setIdsToDelete([...idsToDelete, ...ids])
+      : setIdsToDelete(idsToDelete.filter((id) => !ids.includes(id)));
+  };
+
+  const handOnDelete = async (ids) => {
+    if (window.confirm("Are you sure, you want to delete the items?")) {
+      const { status, message } = await deleteTasks(ids);
+      if (status === "success") {
+        setIdsToDelete([]);
+        fetchAllTasks();
+        alert(message);
       }
     }
   };
-  // if(){
-
-  // }else if(){
-
-  // }else if{
-
-  // }else if(){
-
-  // }
 
   console.log(idsToDelete);
+
   return (
     <>
-      <div className="row mt-5 pt-2">
-        {/* <!-- 1. entry list --> */}
+      <div className="row mt-5 gap-2">
+        {/* <!-- entry list --> */}
         <div className="col-md">
-          <h3 className="text-center">Task Entry List</h3>
+          <h3 className="text-center">Entry List</h3>
           <hr />
           <div>
             <input
               type="checkbox"
               className="form-check-input"
               id="selectEntryList"
-              onChange={handleOnSelectAll}
+              onChange={handelOnSelectAll}
               value="entry"
             />
             <label htmlFor="selectEntryList">Select all entry list</label>
           </div>
-          <table className="table table-striped table-hover border opacity">
+          <table className="table table-striped table-hover">
             <tbody id="entry">
               {entries.map((item, i) => (
                 <tr key={item._id}>
@@ -74,11 +70,12 @@ export const Table = ({ entryList, switchTask, handOnDelete }) => {
                     <input
                       type="checkbox"
                       className="form-check-input"
-                      onChange={handleOnSelect}
+                      onChange={handelOnSelect}
                       value={item._id}
+                      checked={idsToDelete.includes(item._id)}
                     />
                   </td>
-                  <td>{i + 1}</td>
+                  <th>{i + 1}</th>
                   <td>{item.task}</td>
                   <td>{item.hr}hrs</td>
                   <td className="text-end">
@@ -101,7 +98,7 @@ export const Table = ({ entryList, switchTask, handOnDelete }) => {
           </table>
         </div>
 
-        {/* <!-- 2. bad list  --> */}
+        {/* <!-- bad list --> */}
         <div className="col-md">
           <h3 className="text-center">Bad List</h3>
           <hr />
@@ -110,19 +107,25 @@ export const Table = ({ entryList, switchTask, handOnDelete }) => {
               type="checkbox"
               className="form-check-input"
               id="selectEntryList"
-              onChange={handleOnSelectAll}
+              onChange={handelOnSelectAll}
               value="bad"
             />
-            <label htmlFor="selectEntryList">Select all bad list</label>
+            <label htmlFor="selectEntryList">Select all Bad list</label>
           </div>
-          <table className="table table-striped table-hover border opacity">
+          <table className="table table-striped table-hover">
             <tbody id="bad">
               {badList.map((item, i) => (
-                <tr key={i}>
+                <tr key={item._id}>
                   <td>
-                    <input type="checkbox" className="form-check-input" />
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      onChange={handelOnSelect}
+                      value={item._id}
+                      checked={idsToDelete.includes(item._id)}
+                    />
                   </td>
-                  <td>{i + 1}</td>
+                  <th>{i + 1}</th>
                   <td>{item.task}</td>
                   <td>{item.hr}hrs</td>
                   <td className="text-end">
@@ -130,7 +133,10 @@ export const Table = ({ entryList, switchTask, handOnDelete }) => {
                       onClick={() => switchTask(item._id, "entry")}
                       className="btn btn-warning btn-sm"
                     >
-                      <i className="fa-sharp fa-solid fa-arrow-left-long"></i>
+                      <i
+                        className="fa-sharp fa-solid fa-arrow-left-long
+                    "
+                      ></i>
                     </button>
                     {/* <button
                     onClick={() => handOnDelete(item._id)}
@@ -143,21 +149,27 @@ export const Table = ({ entryList, switchTask, handOnDelete }) => {
               ))}
             </tbody>
           </table>
-          <div className="alert alert-info">
-            You could have save ={" "}
-            <span id="badHr">
+          <div className="alert alert-success" role="alert">
+            You could have saved ={" "}
+            <span id="total-bad">
               {badList.reduce((acc, item) => acc + item.hr, 0)}
             </span>
-            hr
+            hrs last week
           </div>
         </div>
       </div>
 
-      <div className="d-grid mb-3">
-        <button className="btn btn-danger btn-lg">
-          <i className="fa-solid fa-trash"></i> Delete 5 task
-        </button>
-      </div>
+      {idsToDelete.length > 0 && (
+        <div className="d-grid mb-3">
+          <button
+            className="btn btn-danger btn-lg"
+            onClick={() => handOnDelete(idsToDelete)}
+          >
+            <i className="fa-solid fa-trash"></i> Delete {idsToDelete.length}
+            task(s)
+          </button>
+        </div>
+      )}
     </>
   );
 };

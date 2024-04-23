@@ -1,6 +1,6 @@
 import axios from "axios";
-const apiEP = " http://localhost:8000/api/v1/tasks";
 
+const apiEP = "http://localhost:8000/api/v1/tasks";
 export const postNewTask = async (taskObj) => {
   try {
     const { data } = await axios.post(apiEP, taskObj);
@@ -18,7 +18,7 @@ export const postNewTask = async (taskObj) => {
 export const getAllTasks = async () => {
   try {
     const { data } = await axios.get(apiEP);
-
+    console.log(data);
     return data;
   } catch (error) {
     console.log(error);
@@ -29,10 +29,13 @@ export const getAllTasks = async () => {
   }
 };
 
-export const deleteTasks = async (_id) => {
+// ids must be an array when doing bulk delete
+export const deleteTasks = async (ids) => {
   try {
-    const { data } = await axios.delete(apiEP + "/" + _id);
-
+    // send one id as params
+    //
+    const { data } = await axios.delete(apiEP, { data: ids });
+    console.log(data);
     return data;
   } catch (error) {
     console.log(error);
@@ -42,11 +45,10 @@ export const deleteTasks = async (_id) => {
     };
   }
 };
-
-export const updateTask = async (obj) => {
+export const updateTask = async (_id) => {
   try {
-    const { data } = await axios.patch(apiEP, obj);
-
+    const { data } = await axios.patch(apiEP, _id);
+    console.log(data);
     return data;
   } catch (error) {
     console.log(error);

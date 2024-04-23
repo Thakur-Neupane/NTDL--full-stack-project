@@ -1,108 +1,103 @@
 import express from "express";
-import { idGenerator } from "../utils.js";
+// import { idGenerator } from "../utils.js";
 import {
-  delteTask,
-  getTasks,
+  deleteTask,
   insertTask,
   updateTask,
-} from "../models/task/TaskModel.js";
-const router = express.Router();
+  getTasks,
+} from "../models/task/taskModel.js";
 
-let fakeDb = [];
+const router = express.Router();
 
 //controllers
 
 //get data
+
 router.get("/", async (req, res) => {
   try {
-    //db query to get the data
-    const tasks = await getTasks();
-    console.log(tasks);
+    const result = await getTasks();
+    console.log(result);
     res.json({
       status: "success",
-      message: "Here are the tasks",
-      tasks,
+      message: `Here are the tasks`,
+      task: result,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
-      status: "error",
+      status: "failure",
       message: error.message,
-      tasks,
     });
   }
 });
 
-//Post data
+//POST data
+
 router.post("/", async (req, res) => {
+  //   const id = idGenerator();
+  //   fakeDb.push({ ...req.body, id }); //add to the database
+
   try {
     const result = await insertTask(req.body);
-
     result?._id
       ? res.json({
           status: "success",
-          message: "New task has been added",
+          message: `New data has been added`,
         })
       : res.json({
-          status: "error",
-          message: "Failed to add new data",
+          status: "failure",
+          message: `Failed to add new data`,
         });
   } catch (error) {
     console.log(error);
     res.status(500).json({
-      status: "error",
+      status: "failure",
       message: error.message,
     });
   }
-  // const id = idGenerator()
-  // fakeDb.push({ ...req.body, id });
 });
 
-//update task
+//update data
+
 router.patch("/", async (req, res) => {
   try {
     const result = await updateTask(req.body);
-
-    console.log(result);
-
     result?._id
       ? res.json({
           status: "success",
           message: "Your task has been updated",
         })
       : res.json({
-          status: "error",
-          message: "No change made in the db, may be invalid data request",
+          status: "failure",
+          error: "The ID does not exist in our records",
         });
   } catch (error) {
     // console.log(error);
-    res.status(500).json({
-      status: "error",
-      message: "something went wrong, try again later.",
-    });
+    res.status(500).json({ message: "something went wrong, try again later" });
   }
 });
-//delete task
-router.delete("/:_id", async (req, res) => {
+
+//delete data
+//single delete
+// router.delete("/:_id",async(req,res))
+router.delete("/", async (req, res) => {
   try {
-    const { _id } = req.params;
-
-    const result = await delteTask(_id);
-
-    result?._id
+    const ids = req.body;
+    const result = await deleteTask(ids);
+    // result?._id
+    result?.deletedCount
       ? res.json({
           status: "success",
-          message: "Your task has been Deleted",
+          message: "Your task has been removed",
         })
       : res.json({
-          status: "error",
-          message: "Unable to delete, try again later",
+          status: "failure",
+          error: "The ID does not exist in our records",
         });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      status: "error",
-      message: "something went wrong, try again later.",
-    });
+    res
+      .status(500)
+      .json({ message: "Something went wrong, please try again!" });
   }
 });
 
